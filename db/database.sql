@@ -3,6 +3,7 @@ CREATE TABLE game_state (
     chat_id BIGINT NOT NULL UNIQUE,
     subchapter TEXT NOT NULL DEFAULT 'start',
     current_conversation_id BIGINT NOT NULL DEFAULT 0
+    flags TEXT
 );
 
 CREATE TABLE journey (
