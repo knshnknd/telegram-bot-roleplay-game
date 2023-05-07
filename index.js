@@ -4,7 +4,7 @@ process.env.NTBA_FIX_350 = 0;
 const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
-const { addNewGameState, getUserGameState, updateConversationId, updateFlag } = require('./db/db');
+const { addNewGameState, getUserGameState, updateConversationId, updatePlayerHistory, updateFlag } = require('./db/db');
 
 const token = ''
 const bot = new TelegramApi(token, {polling: true});
@@ -55,6 +55,7 @@ const start = () => {
     const selectedOption = options.options.find((option) => option.uuid === optionId);
 
     await updateConversationId(chatId, selectedOption.toId);
+    await updatePlayerHistory(chatId, selectedOption.optionText);
     sendConversationPart(chatId)
   })
 }

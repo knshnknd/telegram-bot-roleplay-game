@@ -44,6 +44,17 @@ const updateConversationId = async (chatId, currentConversationId) => {
   }
 };
 
+const updatePlayerHistory = async (chatId, text) => {
+  const client = await pool.connect();
+
+  try {
+    const oldText = await client.query('SELECT history FROM journey WHERE chat_id = $1', [chatId]);
+    const newText = oldText.rows[0].history + ', ' + text;
+    await client.query('UPDATE journey SET history = $1 WHERE chat_id = $2', [newText, chatId]);
+  } finally {
+    client.release();
+  }
+
 const updateFlag = async (chatId, newText) => {
   const client = await pool.connect();
 
@@ -58,4 +69,4 @@ const updateFlag = async (chatId, newText) => {
   }
 };
 
-module.exports = { addNewGameState, getUserGameState, updateConversationId, updateFlag };
+module.exports = { addNewGameState, getUserGameState, updateConversationId, updatePlayerHistory, updateFlag };
