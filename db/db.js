@@ -14,7 +14,6 @@ const addNewGameState = async (chatId) => {
     const userExists = queryResult.rows[0].count > 0;
     if (!userExists) {
       await client.query('INSERT INTO game_state (chat_id, subchapter, current_conversation_id, flags) VALUES ($1, $2, $3, $4)', [chatId, 'start', 0, 'start']);
-      await client.query('INSERT INTO journey (chat_id) VALUES ($1)', [chatId]);
       return true;
     } else {
       await client.query('UPDATE game_state SET subchapter = $1, current_conversation_id = $2, flags = $3 WHERE chat_id = $4', ['start', 0, 'start', chatId]);
@@ -55,7 +54,6 @@ const updatePlayerHistory = async (chatId, text) => {
   } finally {
     client.release();
   }
-};
 
 const updateFlag = async (chatId, newText) => {
   const client = await pool.connect();
