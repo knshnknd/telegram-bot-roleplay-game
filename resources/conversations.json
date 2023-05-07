@@ -18,7 +18,7 @@
       "id": 2,
       "character": "РАССКАЗЧИК",
       "text": "В пророчестве говорилось: «... народ тханпо признан достойным великой награды. Их набожность и преданность снискали благосклонность. Они отправятся далеко от родины, ведомые светом лун, пока не достигнут страны Четырех великих городов. Сумеречный народ не одолеет мощь тханпо. Боги постановили, что эта земля будет принадлежать тханпо, и никто не встанет у них на пути. Они принесут порядок и справедливость. Четыре города будут объединены под лунным знаменем!» \n\nОтаро-Шераб записал это пророчество для потомков.",
-      "processorId": "",
+      "processorId": "test",
       "illustration": ""
     },
     {
@@ -49,33 +49,40 @@
       "fromId": 0,
       "toId": 1,
       "optionText": "...",
-      "optionConditionId": ""
+      "optionConditionId": "start"
     },
     {
       "uuid": "b1b5830f-bad5-4e1f-a3c2-4bea6bfce4da",
-      "fromId": 1,
+      "fromId": 0,
       "toId": 2,
       "optionText": "...",
-      "optionConditionId": ""
+      "optionConditionId": "start"
     },
     {
       "uuid": "2ab08ea3-6fd5-4ea1-a299-30cdefc3f970",
-      "fromId": 2,
+      "fromId": 1,
       "toId": 3,
       "optionText": "...",
       "optionConditionId": ""
     },
     {
-      "uuid": "8bacc0eb-d8c5-4719-8c20-a202f7f36b82",
-      "fromId": 3,
+      "uuid": "2ab08ea3-6fd5-4ea1-a299-30cdefc3f975",
+      "fromId": 1,
       "toId": 4,
       "optionText": "...",
       "optionConditionId": ""
     },
     {
+      "uuid": "8bacc0eb-d8c5-4719-8c20-a202f7f36b82",
+      "fromId": 2,
+      "toId": 3,
+      "optionText": "..i need test.",
+      "optionConditionId": "test"
+    },
+    {
       "uuid": "1a0fc8e2-c228-425b-aa00-566cfdd1ff57",
-      "fromId": 4,
-      "toId": 5,
+      "fromId": 2,
+      "toId": 4,
       "optionText": "...",
       "optionConditionId": ""
     }
