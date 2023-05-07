@@ -5,6 +5,7 @@ const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
 const { addNewGameState, getUserGameState, updateGameState } = require('./db/db');
+const { addNewGameState, getUserGameState, updateGameState, updatePlayerHistory } = require('./db/db');
 
 const token = ''
 const bot = new TelegramApi(token, {polling: true});
@@ -71,6 +72,7 @@ const start = () => {
     const selectedOption = options.options.find((option) => option.uuid === optionId);
 
     await updateGameState(chatId, selectedOption.toId);
+    await updatePlayerHistory(chatId, selectedOption.optionText);
     sendConversationPart(chatId)
   })
 }
