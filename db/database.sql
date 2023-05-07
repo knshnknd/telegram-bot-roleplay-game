@@ -1,8 +1,5 @@
 CREATE TABLE game_state (
     id BIGSERIAL PRIMARY KEY,
-    chat_id BIGINT NOT NULL,
-    subchapter TEXT NOT NULL,
-    current_conversation_id BIGINT NOT NULL
     chat_id BIGINT NOT NULL UNIQUE,
     subchapter TEXT NOT NULL DEFAULT 'start',
     current_conversation_id BIGINT NOT NULL DEFAULT 0
