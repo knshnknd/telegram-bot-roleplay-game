@@ -13,7 +13,7 @@ const addNewGameState = async (chatId) => {
     const queryResult = await client.query('SELECT COUNT(*) FROM game_state WHERE chat_id = $1', [chatId]);
     const userExists = queryResult.rows[0].count > 0;
     if (!userExists) {
-      await client.query('INSERT INTO game_state (chat_id) VALUES ($1)', [chatId]);
+      await client.query('INSERT INTO game_state (chat_id, subchapter, current_conversation_id, flags) VALUES ($1, $2, $3, $4)', [chatId, 'start', 0, 'start']);
       await client.query('INSERT INTO journey (chat_id) VALUES ($1)', [chatId]);
       return true;
     } else {
@@ -46,13 +46,21 @@ const updateConversationId = async (chatId, currentConversationId) => {
 };
 
 const updatePlayerHistory = async (chatId, text) => {
-const updateFlag = async (chatId, newText) => {
   const client = await pool.connect();
 
   try {
     const oldText = await client.query('SELECT history FROM journey WHERE chat_id = $1', [chatId]);
     const newText = oldText.rows[0].history + ', ' + text;
     await client.query('UPDATE journey SET history = $1 WHERE chat_id = $2', [newText, chatId]);
+  } finally {
+    client.release();
+  }
+};
+
+const updateFlag = async (chatId, newText) => {
+  const client = await pool.connect();
+
+  try {
     const oldFlagResult = await client.query('SELECT flags FROM game_state WHERE chat_id = $1', [chatId]);
     const oldFlag = oldFlagResult.rows[0].flags;
     const updatedFlag = `${oldFlag}, ${newText}`;
@@ -63,4 +71,4 @@ const updateFlag = async (chatId, newText) => {
   }
 };
 
-module.exports = { addNewGameState, getUserGameState, updateConversationId, updateFlag };
+module.exports = { addNewGameState, getUserGameState, updateConversationId, updatePlayerHistory, updateFlag };
