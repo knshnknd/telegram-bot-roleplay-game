@@ -13,7 +13,8 @@ const addNewGameState = async (chatId) => {
     const queryResult = await client.query('SELECT COUNT(*) FROM game_state WHERE chat_id = $1', [chatId]);
     const userExists = queryResult.rows[0].count > 0;
     if (!userExists) {
-      await client.query('INSERT INTO game_state (chat_id, subchapter, current_conversation_id) VALUES ($1, $2, $3)', [chatId, 'start', 0]);
+      await client.query('INSERT INTO game_state (chat_id) VALUES ($1)', [chatId]);
+      await client.query('INSERT INTO journey (chat_id) VALUES ($1)', [chatId]);
       return true;
     } else {
       return false;
@@ -43,4 +44,15 @@ const updateGameState = async (chatId, currentConversationId) => {
   }
 };
 
-module.exports = { addNewGameState, getUserGameState, updateGameState };
+const updatePlayerHistory = async (chatId, text) => {
+  const client = await pool.connect();
+  try {
+    const oldText = await client.query('SELECT history FROM journey WHERE chat_id = $1', [chatId]);
+    const newText = oldText.rows[0].history + ', ' + text;
+    await client.query('UPDATE journey SET history = $1 WHERE chat_id = $2', [newText, chatId]);
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { addNewGameState, getUserGameState, updateGameState, updatePlayerHistory };
