@@ -4,7 +4,8 @@ process.env.NTBA_FIX_350 = 0;
 const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
-const { addNewGameState, getUserGameState, updateConversationId, updatePlayerHistory, updateFlag } = require('./db/db');
+const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, removePoints, updatePlayerHistory } = require('./src/db/db');
+const { Events } = require('./src/events/event_list');
 
 const token = ''
 const bot = new TelegramApi(token, {polling: true});
@@ -13,7 +14,7 @@ const NEXT_BUTTON = "... продолжить"
 
 // Util function
 const getTexts = () => {
-  const textsPath = path.join(__dirname, 'util_texts .json');
+  const textsPath = path.join(__dirname, 'resources/util_texts.json');
   const textsContent = fs.readFileSync(textsPath, 'utf8');
   return JSON.parse(textsContent);
 };
@@ -35,7 +36,7 @@ const start = () => {
     }
 
     if (text == "/start" || text == "/start@Strela1Bot") {
-      const isNewUser = await addNewGameState(chatId);
+      const isNewUser = await addNewPlayer(chatId);
       sendConversationPart(chatId)
     }
   });
@@ -99,6 +100,13 @@ async function sendConversationPart(chatId) {
   if (newFlag != "") {
     await updateFlag(chatId, newFlag);
     flags.push(newFlag);
+
+    if (Object.keys(Events).includes(newFlag)) {
+      const status = Events[newFlag];
+      const points = status.points;
+      console.log(`Status '${newFlag}' found with points: ${points}`);
+      // TODO: Add or remove points from the user based on the status
+    }
   }
 
   const currentOptions = conversations.options.filter(
