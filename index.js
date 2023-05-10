@@ -4,7 +4,7 @@ process.env.NTBA_FIX_350 = 0;
 const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
-const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, updatePlayerHistory, updateIsSubchapterEnd, updateSubchapter } = require('./src/db/db');
+const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, updatePlayerHistory, updateIsSubchapterEnd, updateSubchapter, getHistory } = require('./src/db/db');
 const { Events } = require('./src/data/events');
 const { Subchapters } = require('./src/data/subchapters');
 
@@ -33,7 +33,26 @@ const start = () => {
 
     if (text == "/help" || text == "/help@Strela1Bot") {
       const helpText = texts.helpText;
-      bot.sendMessage(chatId, helpText);
+      bot.sendMessage(chatId, helpText, {parse_mode: "HTML"});
+    }
+
+    if (text == "/history" || text == "/history@Strela1Bot") {
+      const rows = await getHistory(chatId);
+      let history = `<b>📜 Ваша история</b>\n\n`;
+      rows.forEach((row) => {
+            history += `<b>Игра №${row.id}</b>\n`;
+            const historyFullText = row.history;
+            const historyArray = historyFullText.split(",");
+            for (let i = 0; i < historyArray.length; i++) {
+              historyText = historyArray[i].trim();
+              if (historyText in Events) {
+                const event = Events[historyText];
+                history += `${event.description}\n`;
+              }
+            }
+            history += "\n";
+          });
+      bot.sendMessage(chatId, history, {parse_mode: "HTML"});
     }
 
     if (text == "/start" || text == "/start@Strela1Bot") {
@@ -101,9 +120,8 @@ async function sendConversationPart(chatId) {
   const newFlag = currentConversation.processorId;
 
   if (newFlag != "") {
-    await updateFlag(chatId, newFlag);
-
     if (Object.keys(Events).includes(newFlag)) {
+      await updateFlag(chatId, newFlag);
       const status = Events[newFlag];
       const points = status.points;
       if (points != 0) {
