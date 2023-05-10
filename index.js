@@ -4,8 +4,9 @@ process.env.NTBA_FIX_350 = 0;
 const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
-const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, removePoints, updatePlayerHistory } = require('./src/db/db');
-const { Events } = require('./src/events/event_list');
+const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, updatePlayerHistory, updateIsSubchapterEnd, updateSubchapter } = require('./src/db/db');
+const { Events } = require('./src/data/events');
+const { Subchapters } = require('./src/data/subchapters');
 
 const token = ''
 const bot = new TelegramApi(token, {polling: true});
@@ -51,19 +52,20 @@ const start = () => {
       reply_markup: {inline_keyboard: [[],]}},
       {chat_id: chatId, message_id: messageId});
 
-    const conversationPath = path.join(__dirname, 'resources', 'conversations.json');
+    const conversationPath = path.join(__dirname, 'resources\\conversations', `${gameState.subchapter}.json`);
     const options = JSON.parse(fs.readFileSync(conversationPath));
     const selectedOption = options.options.find((option) => option.uuid === optionId);
 
-    await updateConversationId(chatId, selectedOption.toId);
-    await updatePlayerHistory(chatId, selectedOption.optionText);
+    if (!gameState.is_subchapter_end) {
+      await updateConversationId(chatId, selectedOption.toId);
+    }
     sendConversationPart(chatId)
   })
 }
 
 // Util function
-const getConversations = () => {
-  const conversationPath = path.join(__dirname, 'resources', 'conversations.json');
+const getConversations = (subchapter) => {
+  const conversationPath = path.join(__dirname, 'resources\\conversations', `${subchapter}.json`);
   return JSON.parse(fs.readFileSync(conversationPath));
 };
 
@@ -84,9 +86,10 @@ const createInlineKeyboard = (currentOptions, flags) => {
 };
 
 async function sendConversationPart(chatId) {
+  updateIsSubchapterEnd(chatId, false);
   const gameState = await getUserGameState(chatId);
   const flags = gameState.flags.split(', ');
-  const conversations = getConversations();
+  const conversations = getConversations(gameState.subchapter);
   const currentConversationIdInteger = parseInt(gameState.current_conversation_id);
 
   const currentConversation = conversations.conversationParts.find(
@@ -99,14 +102,25 @@ async function sendConversationPart(chatId) {
 
   if (newFlag != "") {
     await updateFlag(chatId, newFlag);
-    flags.push(newFlag);
 
     if (Object.keys(Events).includes(newFlag)) {
       const status = Events[newFlag];
       const points = status.points;
-      console.log(`Status '${newFlag}' found with points: ${points}`);
-      // TODO: Add or remove points from the user based on the status
+      if (points != 0) {
+        addPoints(points);
+      }
+      console.log(status.description)
     }
+
+    if (Object.keys(Subchapters).includes(newFlag)) {
+      const subchapter = Subchapters[newFlag];
+      const id = subchapter.id;
+      updateSubchapter(chatId, id + "" + subchapter.name);
+      console.log("updated subchapter")
+      updateIsSubchapterEnd(chatId, true);
+    }
+
+    flags.push(newFlag);
   }
 
   const currentOptions = conversations.options.filter(
@@ -118,14 +132,16 @@ async function sendConversationPart(chatId) {
   if (currentConversation.illustration != "") {
     const illustrationName = currentConversation.illustration;
     const illustration = fs.readFileSync(__dirname + `\\resources\\pics\\${illustrationName}.png`);
-    bot.sendPhoto(chatId, illustration, {
-      parse_mode: 'HTML',
-      caption: `<b>${character}:</b>\n${messageText}`,
-      reply_markup: {
-        inline_keyboard: [inlineKeyboard],
-      },
-    });
-    return;
+    if ( illustration != null ) {
+      bot.sendPhoto(chatId, illustration, {
+        parse_mode: 'HTML',
+        caption: `<b>${character}:</b>\n${messageText}`,
+        reply_markup: {
+          inline_keyboard: [inlineKeyboard],
+        },
+      });
+      return;
+    }
   }
 
   bot.sendMessage(chatId, `<b>${character}:</b>\n${messageText}`, {

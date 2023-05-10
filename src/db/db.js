@@ -14,11 +14,11 @@ const addNewPlayer = async (chatId) => {
     const queryResult = await client.query('SELECT COUNT(*) FROM game_state WHERE chat_id = $1', [chatId]);
     const userExists = queryResult.rows[0].count > 0;
     if (!userExists) {
-      await client.query('INSERT INTO game_state (chat_id, subchapter, current_conversation_id, flags) VALUES ($1, $2, $3, $4)', [chatId, 'start', 0, 'start']);
+      await client.query('INSERT INTO game_state (chat_id, subchapter, current_conversation_id, flags) VALUES ($1, $2, $3, $4)', [chatId, '0START', 0, 'start']);
       await client.query('INSERT INTO journey (chat_id, connected_chat_id) VALUES ($1, $2)', [chatId, chatId]);
       return true;
     } else {
-      await client.query('UPDATE game_state SET subchapter = $1, current_conversation_id = $2, flags = $3 WHERE chat_id = $4', ['start', 0, 'start', chatId]);
+      await client.query('UPDATE game_state SET subchapter = $1, current_conversation_id = $2, flags = $3 WHERE chat_id = $4', ['0START', 0, 'start', chatId]);
 
       const searchResult = await client.query('SELECT id FROM journey WHERE connected_chat_id = $1', [chatId]);
       journeyId = searchResult.rows[0].id;
@@ -52,6 +52,16 @@ const updateConversationId = async (chatId, currentConversationId) => {
   }
 };
 
+const updateIsSubchapterEnd = async (chatId, isEnd) => {
+  const client = await pool.connect();
+  try {
+    await client.query('UPDATE game_state SET is_subchapter_end = $1 WHERE chat_id = $2', [isEnd, chatId]);
+    return true;
+  } finally {
+    client.release();
+  }
+};
+
 const updateFlag = async (chatId, newText) => {
   const client = await pool.connect();
 
@@ -67,23 +77,22 @@ const updateFlag = async (chatId, newText) => {
   }
 };
 
+const updateSubchapter = async (chatId, subchapter) => {
+  const client = await pool.connect();
+
+  try {
+    const oldFlagResult = await client.query('UPDATE game_state SET subchapter = $2, current_conversation_id = 0 WHERE chat_id = $1', [chatId, subchapter]);
+  } finally {
+    client.release();
+  }
+};
+
 const addPoints = async (chatId, pointsToAdd) => {
   const client = await pool.connect();
 
   try {
     await pool.query(`UPDATE game_state SET points = points + $1 WHERE chat_id = $2`, [pointsToAdd, chatId]);
     await pool.query(`UPDATE journey SET points = points + $1 WHERE connected_chat_id = $2`, [pointsToAdd, chatId]);
-  } finally {
-    client.release();
-  }
-};
-
-const removePoints = async (chatId, pointsToRemove) => {
-  const client = await pool.connect();
-
-  try {
-    await pool.query(`UPDATE game_state SET points = points - $1 WHERE chat_id = $2`, [pointsToRemove, chatId]);
-    await pool.query(`UPDATE journey SET points = points - $1 WHERE connected_chat_id = $2`, [pointsToRemove, chatId]);
   } finally {
     client.release();
   }
@@ -102,4 +111,4 @@ const updatePlayerHistory = async (chatId, text) => {
   }
 };
 
-module.exports = { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, removePoints, updatePlayerHistory };
+module.exports = { addNewPlayer, getUserGameState, updateConversationId, updateFlag, updateSubchapter, updateIsSubchapterEnd, addPoints, updatePlayerHistory };
