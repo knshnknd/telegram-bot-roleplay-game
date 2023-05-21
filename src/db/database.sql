@@ -1,7 +1,7 @@
 CREATE TABLE game_state (
     id BIGSERIAL PRIMARY KEY,
     chat_id BIGINT NOT NULL UNIQUE,
-    subchapter TEXT NOT NULL DEFAULT '0START',
+    subchapter TEXT NOT NULL DEFAULT 'A_START',
     current_conversation_id BIGINT NOT NULL DEFAULT 0,
     is_subchapter_end BOOLEAN NOT NULL DEFAULT 'false',
     flags TEXT,
@@ -13,5 +13,6 @@ CREATE TABLE journey (
     chat_id BIGINT NOT NULL,
     history TEXT NOT NULL DEFAULT 'start',
     points BIGINT NOT NULL DEFAULT 0,
+    subchapter TEXT NOT NULL DEFAULT 'A_START',
     connected_chat_id BIGINT
 )

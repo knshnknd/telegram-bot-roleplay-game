@@ -4,7 +4,7 @@ process.env.NTBA_FIX_350 = 0;
 const TelegramApi = require('node-telegram-bot-api');
 const fs = require('fs');
 const path = require('path');
-const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, updatePlayerHistory, updateIsSubchapterEnd, updateSubchapter, getHistory } = require('./src/db/db');
+const { addNewPlayer, getUserGameState, updateConversationId, updateFlag, addPoints, updatePlayerHistory, updateIsSubchapterEnd, updateSubchapter, getHistory, getHistoryRowCount, secretCountHistoryWords } = require('./src/db/db');
 const { Events } = require('./src/data/events');
 const { Subchapters } = require('./src/data/subchapters');
 
@@ -37,22 +37,13 @@ const start = () => {
     }
 
     if (text == "/history" || text == "/history@Strela1Bot") {
-      const rows = await getHistory(chatId);
-      let history = `<b>📜 Ваша история</b>\n\n`;
-      rows.forEach((row) => {
-            history += `<b>Игра №${row.id}</b>\n`;
-            const historyFullText = row.history;
-            const historyArray = historyFullText.split(",");
-            for (let i = 0; i < historyArray.length; i++) {
-              historyText = historyArray[i].trim();
-              if (historyText in Events) {
-                const event = Events[historyText];
-                history += `${event.description}\n`;
-              }
-            }
-            history += "\n";
-          });
+      const history = await getHistory(chatId);
       bot.sendMessage(chatId, history, {parse_mode: "HTML"});
+    }
+
+    if (text == "/skolkoigr" || text == "/skolkoigr@Strela1Bot") {
+      const gameCount = "<b>Всего игр сыграно: " + await getHistoryRowCount() + "</b>\n\n" + await secretCountHistoryWords();
+      bot.sendMessage(chatId, gameCount, {parse_mode: "HTML"});
     }
 
     if (text == "/start" || text == "/start@Strela1Bot") {
@@ -119,7 +110,8 @@ async function sendConversationPart(chatId) {
   const character = currentConversation.character;
   const newFlag = currentConversation.processorId;
 
-  if (newFlag != "") {
+  if (newFlag != "" && newFlag != null) {
+    console.log(newFlag)
     if (Object.keys(Events).includes(newFlag)) {
       await updateFlag(chatId, newFlag);
       const status = Events[newFlag];
@@ -127,14 +119,12 @@ async function sendConversationPart(chatId) {
       if (points != 0) {
         addPoints(points);
       }
-      console.log(status.description)
     }
 
     if (Object.keys(Subchapters).includes(newFlag)) {
       const subchapter = Subchapters[newFlag];
       const id = subchapter.id;
-      updateSubchapter(chatId, id + "" + subchapter.name);
-      console.log("updated subchapter")
+      updateSubchapter(chatId, subchapter.name);
       updateIsSubchapterEnd(chatId, true);
     }
 

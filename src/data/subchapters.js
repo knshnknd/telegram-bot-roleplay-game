@@ -1,12 +1,14 @@
 const Subchapters = {
-  START: {
+  A_START: {
     id: 0,
-    name: "START",
-    description: 'Start subchapter'
+    name: "A_START",
+    fullName: "Начало игры",
+    description: 'Самое начало!'
   },
-  PALACE: {
+  B_PALACE: {
     id: 1,
-    name: "PALACE",
+    name: "B_PALACE",
+    fullName: "Дворец Луаванга в Тарашти",
     description: 'Luavang Palace subchapter'
   },
 };
